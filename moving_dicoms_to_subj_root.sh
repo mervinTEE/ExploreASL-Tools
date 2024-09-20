@@ -4,7 +4,7 @@
 if [ "$#" -lt 1 ]; then
     echo "ERROR"
     echo "Usage: ./moving_dicoms_to_subj_root.sh <path_to_sourcedatafolder> [directory_name_pattern]"
-    echo "Example: ./moving_dicoms_to_subj_root.sh /mnt/hdd/MT/NEURO_BMC/NEURO-ALL scans"
+    echo "Example: ./moving_dicoms_to_subj_root.sh /path/to/sourcedatafolder scans"
     exit 1
 fi
 
