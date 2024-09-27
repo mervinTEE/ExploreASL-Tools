@@ -3,7 +3,7 @@ library(shinydashboard)
 library(DT)
 library(base64enc)
 
-# UI
+# UI.
 ui <- dashboardPage(
     dashboardHeader(title = "Image Grading App"),
     dashboardSidebar(
@@ -15,106 +15,107 @@ ui <- dashboardPage(
             selectInput("entries", "Show entries:", 
                         choices = c(5, 10, 20, 50, 100), 
                         selected = 10),
+            textInput("csv_filename", "CSV File Name:", value = "grading_results.csv"),
             actionButton("saveCSV", "Save to CSV")
         )
     ),
     dashboardBody(
         tags$head(
             tags$style(HTML("
-                html, body {
-                    height: 100%;
-                }
-                .content-wrapper {
-                    display: flex;
-                    flex-direction: column;
-                    height: calc(100vh - 50px);
-                }
-                .content {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                }
-                #main-row {
-                    flex: 1;
-                    display: flex;
-                    min-height: 0;
-                }
-                #main-row > div {
-                    display: flex;
-                    flex-direction: column;
-                }
-                .table-container {
-                    flex: 1;
-                    overflow: auto;
-                }
-                .table-container .dataTables_wrapper {
-                    width: 100%;
-                }
-                .table-container table {
-                    width: 100% !important;
-                }
-                #image_and_buttons_column {
-                    display: flex;
-                    flex-direction: column;
-                }
-                #image_preview_box {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    overflow: hidden;
-                }
-                #image_preview {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    overflow: hidden;
-                }
-                #image_preview img {
-                    max-width: 100%;
-                    max-height: 100%;
-                    object-fit: contain;
-                }
-                #image_caption {
-                    text-align: center;
-                    margin-top: 10px;
-                }
-                #button-row {
-                    margin-top: 10px;
-                }
-                #button-row .box {
-                    margin-bottom: 0;
-                }
-            "))
+              html, body {
+                  height: 100%;
+              }
+              .content-wrapper {
+                  display: flex;
+                  flex-direction: column;
+                  height: calc(100vh - 50px);
+              }
+              .content {
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+              }
+              #main-row {
+                  flex: 1;
+                  display: flex;
+                  min-height: 0;
+              }
+              #main-row > div {
+                  display: flex;
+                  flex-direction: column;
+              }
+              .table-container {
+                  flex: 1;
+                  overflow: auto;
+              }
+              .table-container .dataTables_wrapper {
+                  width: 100%;
+              }
+              .table-container table {
+                  width: 100% !important;
+              }
+              #image_and_buttons_column {
+                  display: flex;
+                  flex-direction: column;
+              }
+              #image_preview_box {
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  overflow: hidden;
+              }
+              #image_preview {
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  overflow: hidden;
+              }
+              #image_preview img {
+                  max-width: 100%;
+                  max-height: 100%;
+                  object-fit: contain;
+              }
+              #image_caption {
+                  text-align: center;
+                  margin-top: 10px;
+              }
+              #button-row {
+                  margin-top: 10px;
+              }
+              #button-row .box {
+                  margin-bottom: 0;
+              }
+          "))
         ),
         tags$script(HTML("
-            $(document).on('keydown', function(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return;
-                }
-                switch(e.which) {
-                    case 49: // 1 key
-                        $('#cbf').click();
-                        break;
-                    case 50: // 2 key
-                        $('#vascular').click();
-                        break;
-                    case 51: // 3 key
-                        $('#artifact').click();
-                        break;
-                    case 52: // 4 key
-                        $('#unknown').click();
-                        break;
-                    case 37: // left arrow key
-                        $('#previous').click();
-                        break;
-                    case 39: // right arrow key
-                        $('#next_image').click();
-                        break;
-                }
-            });
-        ")),
+          $(document).on('keydown', function(e) {
+              if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                  return;
+              }
+              switch(e.which) {
+                  case 49: // 1 key
+                      $('#cbf').click();
+                      break;
+                  case 50: // 2 key
+                      $('#vascular').click();
+                      break;
+                  case 51: // 3 key
+                      $('#artifact').click();
+                      break;
+                  case 52: // 4 key
+                      $('#unknown').click();
+                      break;
+                  case 37: // left arrow key
+                      $('#previous').click();
+                      break;
+                  case 39: // right arrow key
+                      $('#next_image').click();
+                      break;
+              }
+          });
+      ")),
         fluidRow(
             id = "main-row",
             column(width = 3,
@@ -151,6 +152,18 @@ server <- function(input, output, session) {
     )
     
     observeEvent(input$loadDir, {
+        showModal(modalDialog(
+            title = "Load Directory",
+            "Are you sure you want to load the directory?",
+            footer = tagList(
+                modalButton("Cancel"),
+                actionButton("confirmLoad", "Load")
+            )
+        ))
+    })
+    
+    observeEvent(input$confirmLoad, {
+        removeModal()
         values$dir_path <- input$dir_path
         if (dir.exists(values$dir_path)) {
             values$image_files <- list.files(values$dir_path, pattern = "\\.(jpg|jpeg|png)$", full.names = TRUE)
@@ -255,9 +268,40 @@ server <- function(input, output, session) {
     
     observeEvent(input$saveCSV, {
         req(values$grading_data)
-        write.csv(values$grading_data, file = file.path(values$dir_path, "grading_results.csv"), row.names = FALSE)
-        showNotification("Results saved to CSV", type = "message")
+        
+        # Construct the full file path
+        file_path <- file.path(values$dir_path, input$csv_filename)
+        
+        # Check if the file already exists
+        if (file.exists(file_path)) {
+            # If it exists, show a confirmation dialog
+            showModal(modalDialog(
+                title = "File already exists",
+                "The specified file already exists. Do you want to overwrite it?",
+                footer = tagList(
+                    modalButton("Cancel"),
+                    actionButton("confirmOverwrite", "Overwrite")
+                )
+            ))
+        } else {
+            # If it doesn't exist, save the file
+            saveCSV(file_path)
+        }
     })
+    
+    # Add a new observer for the confirmation
+    observeEvent(input$confirmOverwrite, {
+        req(values$grading_data)
+        file_path <- file.path(values$dir_path, input$csv_filename)
+        saveCSV(file_path)
+        removeModal()
+    })
+    
+    # Create a function to save the CSV
+    saveCSV <- function(file_path) {
+        write.csv(values$grading_data, file = file_path, row.names = FALSE)
+        showNotification(paste("Results saved to", basename(file_path)), type = "message")
+    }
 }
 
 # Run the app
