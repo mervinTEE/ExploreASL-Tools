@@ -76,7 +76,6 @@ ui <- dashboardPage(
                   align-items: center;
                   overflow: hidden;
                   flex-direction: column;
-                  height: 100%;
               }
               #image_preview img {
                   max-width: 100%;
@@ -88,8 +87,10 @@ ui <- dashboardPage(
                   margin-bottom: 10px;
               }
               #button-row {
+                  height: 50px;
                   display: flex;
                   justify-content: space-around;
+                  align-items: center;
                   flex-shrink: 0;
               }
               #button-row .box {
@@ -135,7 +136,9 @@ ui <- dashboardPage(
       column(width = 9, id = "image_and_buttons_column",
              box(width = NULL, id = "image_preview_box",
                  title = "Image Preview",
-                 uiOutput("image_preview")
+                 div(id = "image_preview",
+                     uiOutput("image_preview")
+                 )
              ),
              box(width = NULL, id = "button-row",
                  actionButton("cbf", "CBF (1)"),
@@ -219,10 +222,8 @@ server <- function(input, output, session) {
       img_data <- base64enc::base64encode(readBin(current_file, "raw", file.info(current_file)$size))
       tagList(
         tags$p(id = "image_caption", basename(current_file)),
-        div(id = "image_preview",
-            tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
-                     style = "max-width: 100%; max-height: 100%; object-fit: contain;")
-        )
+        tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
+                 style = "max-width: 100%; max-height: 100%; object-fit: contain;")
       )
     }
   })
