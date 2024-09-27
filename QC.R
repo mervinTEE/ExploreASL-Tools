@@ -25,6 +25,8 @@ ui <- dashboardPage(
       tags$style(HTML("
               html, body {
                   height: 100%;
+                  margin: 0;
+                  overflow: hidden;
               }
               .content-wrapper {
                   display: flex;
@@ -44,6 +46,7 @@ ui <- dashboardPage(
               #main-row > div {
                   display: flex;
                   flex-direction: column;
+                  overflow: hidden;
               }
               .table-container {
                   flex: 1;
@@ -58,6 +61,7 @@ ui <- dashboardPage(
               #image_and_buttons_column {
                   display: flex;
                   flex-direction: column;
+                  height: 100%;
               }
               #image_preview_box {
                   flex: 1;
@@ -68,10 +72,11 @@ ui <- dashboardPage(
               #image_preview {
                   flex: 1;
                   display: flex;
-                  flex-direction: column;
                   justify-content: center;
                   align-items: center;
                   overflow: hidden;
+                  flex-direction: column;
+                  height: 100%;
               }
               #image_preview img {
                   max-width: 100%;
@@ -80,10 +85,12 @@ ui <- dashboardPage(
               }
               #image_caption {
                   text-align: center;
-                  margin-top: 10px;
+                  margin-bottom: 10px;
               }
               #button-row {
-                  margin-top: 10px;
+                  display: flex;
+                  justify-content: space-around;
+                  flex-shrink: 0;
               }
               #button-row .box {
                   margin-bottom: 0;
@@ -211,11 +218,11 @@ server <- function(input, output, session) {
       
       img_data <- base64enc::base64encode(readBin(current_file, "raw", file.info(current_file)$size))
       tagList(
+        tags$p(id = "image_caption", basename(current_file)),
         div(id = "image_preview",
             tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
                      style = "max-width: 100%; max-height: 100%; object-fit: contain;")
-        ),
-        tags$p(id = "image_caption", basename(current_file))
+        )
       )
     }
   })
