@@ -5,7 +5,7 @@ library(base64enc)
 
 # UI
 ui <- dashboardPage(
-  dashboardHeader(title = "Image Grading App"),
+  dashboardHeader(title = "QC One Panel"),
   dashboardSidebar(
     sidebarMenu(
       textInput("dir_path", "Enter Directory Path:"),
@@ -17,7 +17,12 @@ ui <- dashboardPage(
                   selected = 10),
       textInput("csv_filename", "CSV File Name:", value = "grading_results.csv"),
       actionButton("loadCSV", "Load CSV"),
-      actionButton("saveCSV", "Save to CSV")
+      actionButton("saveCSV", "Save to CSV"),
+      br(),
+      div(style = "display: flex; align-items: center; height: 38px;margin-left: 15px",
+          strong("Images left:"),
+          span(style = "margin-left: 5px;", textOutput("ungraded_count", inline = TRUE))
+      )
     )
   ),
   dashboardBody(
@@ -184,6 +189,7 @@ server <- function(input, output, session) {
         grading = rep("", length(values$image_files)),
         stringsAsFactors = FALSE
       )
+      updateUngradedCount()  # Update ungraded count after loading directory
     } else {
       showNotification("Invalid directory path", type = "error")
     }
@@ -199,6 +205,7 @@ server <- function(input, output, session) {
         if (is.na(values$current_index)) {
           values$current_index <- 1
         }
+        updateUngradedCount()  # Update ungraded count after loading CSV
         showNotification("CSV loaded successfully", type = "message")
       } else {
         showNotification("CSV format is incorrect", type = "error")
@@ -248,6 +255,7 @@ server <- function(input, output, session) {
     values$grading_data$grading[values$current_index] <- grade
     values$current_index <- min(values$current_index + 1, length(values$image_files))
     dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+    updateUngradedCount()  # Update ungraded count after grading
   }
   
   observeEvent(input$previous, {
@@ -329,6 +337,14 @@ server <- function(input, output, session) {
   saveCSV <- function(file_path) {
     write.csv(values$grading_data, file = file_path, row.names = FALSE)
     showNotification(paste("Results saved to", basename(file_path)), type = "message")
+  }
+  
+  # Function to update the ungraded count
+  updateUngradedCount <- function() {
+    ungraded_count <- sum(values$grading_data$grading == "")
+    output$ungraded_count <- renderText({
+      ungraded_count
+    })
   }
 }
 

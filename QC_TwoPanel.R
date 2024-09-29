@@ -5,7 +5,7 @@ library(base64enc)
 
 # UI
 ui <- dashboardPage(
-  dashboardHeader(title = "Image Grading App"),
+  dashboardHeader(title = "QC Two Panel"),
   dashboardSidebar(
     sidebarMenu(
       textInput("dir_path", "Enter Directory Path:"),
@@ -19,114 +19,15 @@ ui <- dashboardPage(
                   selected = 10),
       textInput("csv_filename", "CSV File Name:", value = "grading_results.csv"),
       actionButton("loadCSV", "Load CSV"),
-      actionButton("saveCSV", "Save to CSV")
+      actionButton("saveCSV", "Save to CSV"),
+      br(),
+      div(style = "display: flex; height: 38px;margin-left: 15px;",
+          strong("Images left:"),
+          span(style = "margin-left: 5px;", textOutput("ungraded_count", inline = TRUE))
+      )
     )
   ),
   dashboardBody(
-    tags$head(
-      tags$style(HTML("
-              html, body {
-                  height: 100%;
-                  margin: 0;
-                  overflow: hidden;
-              }
-              .content-wrapper {
-                  display: flex;
-                  flex-direction: column;
-                  height: calc(100vh - 50px);
-              }
-              .content {
-                  flex: 1;
-                  display: flex;
-                  flex-direction: column;
-              }
-              #main-row {
-                  flex: 1;
-                  display: flex;
-                  min-height: 0;
-              }
-              #main-row > div {
-                  display: flex;
-                  flex-direction: column;
-                  overflow: hidden;
-              }
-              .table-container {
-                  flex: 1;
-                  overflow: auto;
-              }
-              .table-container .dataTables_wrapper {
-                  width: 100%;
-              }
-              .table-container table {
-                  width: 100% !important;
-              }
-              #image_and_buttons_column {
-                  display: flex;
-                  flex-direction: column;
-                  height: 100%;
-              }
-              #image_preview_box, #second_image_preview_box {
-                  flex: 1;
-                  display: flex;
-                  flex-direction: column;
-                  overflow: hidden;
-              }
-              #image_preview, #second_image_preview {
-                  flex: 1;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  overflow: hidden;
-                  flex-direction: column;
-              }
-              #image_preview img, #second_image_preview img {
-                  max-width: 100%;
-                  max-height: 100%;
-                  object-fit: contain;
-              }
-              #image_caption, #second_image_caption {
-                  text-align: center;
-                  margin-bottom: 10px;
-              }
-              #button-row {
-                  height: 50px;
-                  display: flex;
-                  justify-content: space-around;
-                  align-items: center;
-                  flex-shrink: 0;
-              }
-              #button-row .box {
-                  margin-bottom: 0;
-              }
-          "))
-    ),
-    tags$script(HTML("
-          $(document).on('keydown', function(e) {
-              if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                  return;
-              }
-              switch(e.which) {
-                  case 49: // 1 key
-                      $('#cbf').click();
-                      break;
-                  case 50: // 2 key
-                      $('#vascular').click();
-                      break;
-                  case 51: // 3 key
-                      $('#artifact').click();
-                      break;
-                  case 52: // 4 key
-                      $('#unknown').click();
-                      break;
-                  case 37: // left arrow key
-                      $('#previous').click();
-                      break;
-                  case 39: // right arrow key
-                      $('#next_image').click();
-                      break;
-              }
-          });
-      ")),
     fluidRow(
       id = "main-row",
       column(width = 3,
@@ -200,6 +101,7 @@ server <- function(input, output, session) {
         grading = rep("", length(values$image_files)),
         stringsAsFactors = FALSE
       )
+      updateUngradedCount()  # Update ungraded count after loading directory
     } else {
       showNotification("Invalid directory path", type = "error")
     }
@@ -232,6 +134,7 @@ server <- function(input, output, session) {
         if (is.na(values$current_index)) {
           values$current_index <- 1
         }
+        updateUngradedCount()  # Update ungraded count after loading CSV
         showNotification("CSV loaded successfully", type = "message")
       } else {
         showNotification("CSV format is incorrect", type = "error")
@@ -301,6 +204,7 @@ server <- function(input, output, session) {
     values$grading_data$grading[values$current_index] <- grade
     values$current_index <- min(values$current_index + 1, length(values$image_files))
     dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+    updateUngradedCount()  # Update ungraded count after grading
   }
   
   observeEvent(input$previous, {
@@ -382,6 +286,14 @@ server <- function(input, output, session) {
   saveCSV <- function(file_path) {
     write.csv(values$grading_data, file = file_path, row.names = FALSE)
     showNotification(paste("Results saved to", basename(file_path)), type = "message")
+  }
+  
+  # Function to update the ungraded count
+  updateUngradedCount <- function() {
+    ungraded_count <- sum(values$grading_data$grading == "")
+    output$ungraded_count <- renderText({
+      ungraded_count
+    })
   }
 }
 
