@@ -230,15 +230,15 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$vascular, {
-    updateGrading("VASCULAR")
+    updateGrading("Vascular")
   })
   
   observeEvent(input$artifact, {
-    updateGrading("ARTIFACT")
+    updateGrading("Artifact")
   })
   
   observeEvent(input$unknown, {
-    updateGrading("UNKNOWN")
+    updateGrading("Unknown")
   })
   
   updateGrading <- function(grade) {
@@ -294,7 +294,12 @@ server <- function(input, output, session) {
       formatStyle(
         'filename',
         target = 'row',
-        backgroundColor = styleEqual(values$grading_data$filename[values$current_index], 'lightblue')
+        backgroundColor = styleEqual(values$grading_data$filename[values$current_index], 'lightgrey')
+      )%>% 
+      formatStyle(
+        'grading', 
+        target = 'row', 
+        backgroundColor = styleEqual(c("CBF", "Vascular", "Artifact", "Unknown"), c("lightgreen", "lightblue","lightcoral", "lightyellow"))
       )
   })
   
