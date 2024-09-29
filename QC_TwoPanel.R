@@ -214,6 +214,33 @@ server <- function(input, output, session) {
     }
   })
   
+  observeEvent(input$loadCSV, {
+    req(values$dir_path)  # Ensure the directory path is set
+    file_path <- file.path(values$dir_path, input$csv_filename)
+    
+    if (file.exists(file_path)) {
+      loaded_data <- tryCatch({
+        read.csv(file_path, stringsAsFactors = FALSE)
+      }, error = function(e) {
+        showNotification("Error reading CSV file", type = "error")
+        return(NULL)
+      })
+      
+      if (!is.null(loaded_data) && all(c("filename", "grading") %in% colnames(loaded_data))) {
+        values$grading_data <- loaded_data
+        values$current_index <- which(values$grading_data$grading == "")[1]
+        if (is.na(values$current_index)) {
+          values$current_index <- 1
+        }
+        showNotification("CSV loaded successfully", type = "message")
+      } else {
+        showNotification("CSV format is incorrect", type = "error")
+      }
+    } else {
+      showNotification("CSV file does not exist", type = "error")
+    }
+  })
+  
   output$image_preview <- renderUI({
     req(values$image_files)
     if (length(values$image_files) > 0) {
