@@ -8,7 +8,7 @@ ui <- dashboardPage(
   dashboardHeader(title = "QC Two Panel"),
   dashboardSidebar(
     sidebarMenu(
-      textInput("dir_path", "Enter Directory Path:"),
+      textInput("dir_path", "Enter First Directory Path:"),
       actionButton("loadDir", "Load Directory"),
       br(),
       textInput("second_dir_path", "Enter Second Directory Path:"),

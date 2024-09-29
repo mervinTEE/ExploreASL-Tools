@@ -25,7 +25,7 @@ This runs in R Shiny. To facilitate QC process you can provide the path to the j
 - Load of previous grading from csv file with past gradings (limitations: needs to ensure that it is the right csv file)
 - Added prompts when you are trying to load the path to avoid accidental refresh.
 - Added field to name your csv export file and prompts to warn about overwriting existing files.
-- Added additional version (QC_TwoPanel.R) which allows you to scroll through two views concurrently. Preload your images into two folders and provide the paths accordingly. Ensure that each folder has the same subjects' images. 
+- Added additional version (QC_TwoPanel.R) which allows you to scroll through two views concurrently. Pre load your images into two folders and provide the paths accordingly. Ensure that each folder has the same subjects' images. CSV file path will always be taking reference from first directory Loaded
 - Added counter to inform the number of images left to grade
 - Added comment field to provide additional information about the image when needed. 
 
