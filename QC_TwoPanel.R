@@ -56,6 +56,10 @@ ui <- dashboardPage(
             case 39: // right arrow key
               $('#next_image').click();
               break;
+            case 67: // C key for comment box
+              $('#comment').focus(); 
+              e.preventDefault(); // Prevent 'C' from being entered into the text field
+              break;  
           }
         });
       "))
