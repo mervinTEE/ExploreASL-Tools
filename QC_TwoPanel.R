@@ -24,37 +24,40 @@ ui <- dashboardPage(
       div(style = "display: flex; height: 38px;margin-left: 15px;",
           strong("Images left:"),
           span(style = "margin-left: 5px;", textOutput("ungraded_count", inline = TRUE))
-      )
+      ),
+      br(),
+      textInput("comment", "Add Comment:", placeholder = "Enter your comment here..."),
+      actionButton("submit_comment", "Submit Comment")
     )
   ),
   dashboardBody(
     tags$head(
       tags$script(HTML("
-          $(document).on('keydown', function(e) {
-              if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                  return;
-              }
-              switch(e.which) {
-                  case 49: // 1 key
-                      $('#cbf').click();
-                      break;
-                  case 50: // 2 key
-                      $('#vascular').click();
-                      break;
-                  case 51: // 3 key
-                      $('#artifact').click();
-                      break;
-                  case 52: // 4 key
-                      $('#unknown').click();
-                      break;
-                  case 37: // left arrow key
-                      $('#previous').click();
-                      break;
-                  case 39: // right arrow key
-                      $('#next_image').click();
-                      break;
-              }
-          });
+        $(document).on('keydown', function(e) {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+          }
+          switch(e.which) {
+            case 49: // 1 key
+              $('#cbf').click();
+              break;
+            case 50: // 2 key
+              $('#vascular').click();
+              break;
+            case 51: // 3 key
+              $('#artifact').click();
+              break;
+            case 52: // 4 key
+              $('#unknown').click();
+              break;
+            case 37: // left arrow key
+              $('#previous').click();
+              break;
+            case 39: // right arrow key
+              $('#next_image').click();
+              break;
+          }
+        });
       "))
     ),
     fluidRow(
@@ -105,7 +108,7 @@ server <- function(input, output, session) {
     image_files = NULL,
     second_image_files = NULL,
     current_index = 1,
-    grading_data = data.frame(filename = character(), grading = character(), stringsAsFactors = FALSE)
+    grading_data = data.frame(filename = character(), grading = character(), comments = character(), stringsAsFactors = FALSE)
   )
   
   observeEvent(input$loadDir, {
@@ -128,9 +131,10 @@ server <- function(input, output, session) {
       values$grading_data <- data.frame(
         filename = basename(values$image_files),
         grading = rep("", length(values$image_files)),
+        comments = rep("", length(values$image_files)),
         stringsAsFactors = FALSE
       )
-      updateUngradedCount()  # Update ungraded count after loading directory
+      updateUngradedCount()
     } else {
       showNotification("Invalid directory path", type = "error")
     }
@@ -146,7 +150,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$loadCSV, {
-    req(values$dir_path)  # Ensure the directory path is set
+    req(values$dir_path)
     file_path <- file.path(values$dir_path, input$csv_filename)
     
     if (file.exists(file_path)) {
@@ -157,13 +161,13 @@ server <- function(input, output, session) {
         return(NULL)
       })
       
-      if (!is.null(loaded_data) && all(c("filename", "grading") %in% colnames(loaded_data))) {
+      if (!is.null(loaded_data) && all(c("filename", "grading", "comments") %in% colnames(loaded_data))) {
         values$grading_data <- loaded_data
         values$current_index <- which(values$grading_data$grading == "")[1]
         if (is.na(values$current_index)) {
           values$current_index <- 1
         }
-        updateUngradedCount()  # Update ungraded count after loading CSV
+        updateUngradedCount()
         showNotification("CSV loaded successfully", type = "message")
       } else {
         showNotification("CSV format is incorrect", type = "error")
@@ -175,41 +179,45 @@ server <- function(input, output, session) {
   
   output$image_preview <- renderUI({
     req(values$image_files)
-    if (length(values$image_files) > 0) {
+    if (length(values$image_files) > 0 && !is.na(values$current_index)) {
       current_file <- values$image_files[values$current_index]
-      ext <- tools::file_ext(current_file)
-      mime_type <- switch(ext,
-                          jpg = "image/jpeg",
-                          jpeg = "image/jpeg",
-                          png = "image/png",
-                          "application/octet-stream")
-      
-      img_data <- base64enc::base64encode(readBin(current_file, "raw", file.info(current_file)$size))
-      tagList(
-        tags$p(id = "image_caption", basename(current_file)),
-        tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
-                 style = "max-width: 100%; max-height: 100%; object-fit: contain;")
-      )
+      if (file.exists(current_file)) {
+        ext <- tools::file_ext(current_file)
+        mime_type <- switch(ext,
+                            jpg = "image/jpeg",
+                            jpeg = "image/jpeg",
+                            png = "image/png",
+                            "application/octet-stream")
+        
+        img_data <- base64enc::base64encode(readBin(current_file, "raw", file.info(current_file)$size))
+        tagList(
+          tags$p(id = "image_caption", basename(current_file)),
+          tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
+                   style = "max-width: 100%; max-height: 100%; object-fit: contain;")
+        )
+      }
     }
   })
   
   output$second_image_preview <- renderUI({
     req(values$second_image_files)
-    if (length(values$second_image_files) > 0) {
+    if (length(values$second_image_files) > 0 && !is.na(values$current_index)) {
       current_file <- values$second_image_files[values$current_index]
-      ext <- tools::file_ext(current_file)
-      mime_type <- switch(ext,
-                          jpg = "image/jpeg",
-                          jpeg = "image/jpeg",
-                          png = "image/png",
-                          "application/octet-stream")
-      
-      img_data <- base64enc::base64encode(readBin(current_file, "raw", file.info(current_file)$size))
-      tagList(
-        tags$p(id = "second_image_caption", basename(current_file)),
-        tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
-                 style = "max-width: 100%; max-height: 100%; object-fit: contain;")
-      )
+      if (file.exists(current_file)) {
+        ext <- tools::file_ext(current_file)
+        mime_type <- switch(ext,
+                            jpg = "image/jpeg",
+                            jpeg = "image/jpeg",
+                            png = "image/png",
+                            "application/octet-stream")
+        
+        img_data <- base64enc::base64encode(readBin(current_file, "raw", file.info(current_file)$size))
+        tagList(
+          tags$p(id = "second_image_caption", basename(current_file)),
+          tags$img(src = paste0(sprintf("data:%s;base64,", mime_type), img_data), 
+                   style = "max-width: 100%; max-height: 100%; object-fit: contain;")
+        )
+      }
     }
   })
   
@@ -230,20 +238,26 @@ server <- function(input, output, session) {
   })
   
   updateGrading <- function(grade) {
-    values$grading_data$grading[values$current_index] <- grade
-    values$current_index <- min(values$current_index + 1, length(values$image_files))
-    dataTableProxy('grading_table') %>% replaceData(values$grading_data)
-    updateUngradedCount()  # Update ungraded count after grading
+    if (!is.null(values$grading_data) && values$current_index <= nrow(values$grading_data)) {
+      values$grading_data$grading[values$current_index] <- grade
+      values$current_index <- min(values$current_index + 1, length(values$image_files))
+      dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+      updateUngradedCount()
+    }
   }
   
   observeEvent(input$previous, {
-    values$current_index <- max(values$current_index - 1, 1)
-    dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+    if (values$current_index > 1) {
+      values$current_index <- max(values$current_index - 1, 1)
+      dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+    }
   })
   
   observeEvent(input$next_image, {
-    values$current_index <- min(values$current_index + 1, length(values$image_files))
-    dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+    if (values$current_index < length(values$image_files)) {
+      values$current_index <- min(values$current_index + 1, length(values$image_files))
+      dataTableProxy('grading_table') %>% replaceData(values$grading_data)
+    }
   })
   
   output$grading_table <- renderDT({
@@ -283,12 +297,9 @@ server <- function(input, output, session) {
   observeEvent(input$saveCSV, {
     req(values$grading_data)
     
-    # Construct the full file path
     file_path <- file.path(values$dir_path, input$csv_filename)
     
-    # Check if the file already exists
     if (file.exists(file_path)) {
-      # If it exists, show a confirmation dialog
       showModal(modalDialog(
         title = "File already exists",
         "The specified file already exists. Do you want to overwrite it?",
@@ -298,12 +309,10 @@ server <- function(input, output, session) {
         )
       ))
     } else {
-      # If it doesn't exist, save the file
       saveCSV(file_path)
     }
   })
   
-  # Add a new observer for the confirmation
   observeEvent(input$confirmOverwrite, {
     req(values$grading_data)
     file_path <- file.path(values$dir_path, input$csv_filename)
@@ -311,19 +320,27 @@ server <- function(input, output, session) {
     removeModal()
   })
   
-  # Create a function to save the CSV
   saveCSV <- function(file_path) {
     write.csv(values$grading_data, file = file_path, row.names = FALSE)
     showNotification(paste("Results saved to", basename(file_path)), type = "message")
   }
   
-  # Function to update the ungraded count
   updateUngradedCount <- function() {
     ungraded_count <- sum(values$grading_data$grading == "")
     output$ungraded_count <- renderText({
       ungraded_count
     })
   }
+  
+  observeEvent(input$submit_comment, {
+    req(values$grading_data)
+    if (values$current_index <= nrow(values$grading_data)) {
+      values$grading_data$comments[values$current_index] <- input$comment
+      updateUngradedCount()
+      showNotification("Comment added successfully", type = "message")
+      updateTextInput(session, "comment", value = "")
+    }
+  })
 }
 
 # Run the app

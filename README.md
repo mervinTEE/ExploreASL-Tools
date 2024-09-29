@@ -26,8 +26,11 @@ This runs in R Shiny. To facilitate QC process you can provide the path to the j
 - Added prompts when you are trying to load the path to avoid accidental refresh.
 - Added field to name your csv export file and prompts to warn about overwriting existing files.
 - Added additional version (QC_TwoPanel.R) which allows you to scroll through two views concurrently. Preload your images into two folders and provide the paths accordingly. Ensure that each folder has the same subjects' images. 
+- Added counter to inform the number of images left to grade
+- Added comment field to provide additional information about the image when needed. 
 
 ![Alt Text](Images/two_panel.jpeg)
 
 ### Current limitations
-* Yet to implement a dropdown for you to select the specific image without scrolling through all subjs, but it doesn't take too long to scroll using the keys at this moment. 
+* Yet to implement a dropdown for you to select the specific image without scrolling through all subjs, but it doesn't take too long to scroll using the keys at this moment.
+* Two-panel will not know if images mismatch between sessions or subject, so make sure to check your images before proceeding.
