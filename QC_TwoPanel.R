@@ -290,16 +290,16 @@ server <- function(input, output, session) {
         autoWidth = TRUE
       ),
       rownames = FALSE
-    ) %>%
-      formatStyle(
-        'filename',
-        target = 'row',
-        backgroundColor = styleEqual(values$grading_data$filename[values$current_index], 'lightgrey')
-      )%>% 
+    )%>% 
       formatStyle(
         'grading', 
         target = 'row', 
         backgroundColor = styleEqual(c("CBF", "Vascular", "Artifact", "Unknown"), c("lightgreen", "lightblue","lightcoral", "lightyellow"))
+      ) %>%
+      formatStyle(
+        'filename',
+        target = 'row',
+        backgroundColor = styleEqual(values$grading_data$filename[values$current_index], 'lightgrey')
       )
   })
   
