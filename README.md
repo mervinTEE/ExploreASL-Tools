@@ -33,4 +33,4 @@ This runs in R Shiny. To facilitate QC process you can provide the path to the j
 
 ### Current limitations
 * Yet to implement a dropdown for you to select the specific image without scrolling through all subjs, but it doesn't take too long to scroll using the keys at this moment.
-* Two-panel will not know if images mismatch between sessions or subject, so make sure to check your images before proceeding.
+* Two-panel will not know if images mismatch between sessions or subjects, so make sure to check your images before your screening.
