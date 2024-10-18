@@ -23,6 +23,13 @@ This runs in R Shiny. To facilitate QC process you can provide the path to the j
 
 Recommended for two panel function, first group all your Coronal and Transverse images into separate folders. Then use these two paths as the directory paths to load the images. The csv will always be saved to the first directory loaded.
 
+### Steps to Get Started
+1) Load first directory
+2) Load second directory (optional)
+3) Check if both images matches (optional, if you did not load second panel)
+4) Load csv file (optional, if you do not have previously graded csv saved)
+5) Start grading, either using mouse or keys. 
+
 ### New Features Added
 - Load of previous grading from csv file with past gradings (limitations: needs to ensure that it is the right csv file)
 - Added prompts when you are trying to load the path to avoid accidental refresh.
