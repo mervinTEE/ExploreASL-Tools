@@ -5,7 +5,7 @@ library(base64enc)
 
 # UI
 ui <- dashboardPage(
-  dashboardHeader(title = "QC Two Panel"),
+  dashboardHeader(title = "QC Three Panel"),
   dashboardSidebar(
     sidebarMenu(
       textInput("dir_path", "Enter First Directory Path:"),
